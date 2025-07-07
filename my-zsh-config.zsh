@@ -1,4 +1,13 @@
 #!/usr/bin/env zsh
 
-SCRIPT_DIR="$(dirname "$0")"
-source "$SCRIPT_DIR/my-git-functions.zsh"
+# Set up fzf key bindings and fuzzy completion
+# https://github.com/junegunn/fzf
+source <(fzf --zsh)
+
+# Open VS Code in current repository 
+alias c="code ."
+
+
+# todo add readme
+# todo add rest of zsh config
+# todo use ZSH_CUSTOM ?

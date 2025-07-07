@@ -5,7 +5,7 @@
 
 # Git Worktree Add shortcut function
 gwa() {
-    local base_path="/Users/mutasem/repos/n8n-worktree/master"
+    local base_path="/Users/mutasem/repos/n8n-worktree"
     local branch_name=""
     local create_new_branch=false
     
@@ -93,15 +93,15 @@ gwl() {
 }
 
 # Git Worktree Remove shortcut function
-gwr() {
+gwrm() {
     local worktree_path="$1"
     
     # Check if worktree path is provided
     if [[ -z "$worktree_path" ]]; then
-        echo "Usage: gwr <worktree-path-or-branch-name>"
+        echo "Usage: gwrm <worktree-path-or-branch-name>"
         echo "Examples:"
-        echo "  gwr branch-name                           # Remove by branch name"
-        echo "  gwr /Users/mutasem/repos/n8n-worktree/master/branch-name  # Remove by full path"
+        echo "  gwrm branch-name                           # Remove by branch name"
+        echo "  gwrm /Users/mutasem/repos/n8n-worktree/branch-name  # Remove by full path"
         echo ""
         echo "Current worktrees:"
         git worktree list
@@ -110,7 +110,7 @@ gwr() {
     
     # If the argument doesn't start with /, assume it's a branch name and construct the full path
     if [[ "$worktree_path" != /* ]]; then
-        local base_path="/Users/mutasem/repos/n8n-worktree/master"
+        local base_path="/Users/mutasem/repos/n8n-worktree"
         worktree_path="$base_path/$worktree_path"
     fi
     

@@ -94,13 +94,12 @@ gwl() {
 
 # Git Worktree Remove shortcut function
 gwrm() {
-    local worktree_path="$1"
-    
-    # Check if worktree path is provided
-    if [[ -z "$worktree_path" ]]; then
-        echo "Usage: gwrm <worktree-path-or-branch-name>"
+    # Check if any arguments are provided
+    if [[ $# -eq 0 ]]; then
+        echo "Usage: gwrm <worktree-path-or-branch-name> [worktree-path-or-branch-name...]"
         echo "Examples:"
-        echo "  gwrm branch-name                           # Remove by branch name"
+        echo "  gwrm branch-name                           # Remove single branch by name"
+        echo "  gwrm branch1 branch2 branch3              # Remove multiple branches by name"
         echo "  gwrm /Users/mutasem/repos/n8n-worktree/branch-name  # Remove by full path"
         echo ""
         echo "Current worktrees:"
@@ -108,20 +107,42 @@ gwrm() {
         return 1
     fi
     
-    # If the argument doesn't start with /, assume it's a branch name and construct the full path
-    if [[ "$worktree_path" != /* ]]; then
-        local base_path="/Users/mutasem/repos/n8n-worktree"
-        worktree_path="$base_path/$worktree_path"
+    local failed_removals=()
+    local successful_removals=()
+    
+    # Process each worktree path/branch name
+    for worktree_arg in "$@"; do
+        local worktree_path="$worktree_arg"
+        
+        # If the argument doesn't start with /, assume it's a branch name and construct the full path
+        if [[ "$worktree_path" != /* ]]; then
+            local base_path="/Users/mutasem/repos/n8n-worktree"
+            worktree_path="$base_path/$worktree_path"
+        fi
+        
+        echo "Removing worktree: $worktree_path"
+        git worktree remove "$worktree_path"
+        
+        # Check if command was successful
+        if [[ $? -eq 0 ]]; then
+            echo "✓ Worktree removed successfully: $worktree_path"
+            successful_removals+=("$worktree_arg")
+        else
+            echo "✗ Failed to remove worktree: $worktree_path"
+            failed_removals+=("$worktree_arg")
+        fi
+        echo ""
+    done
+    
+    # Summary
+    if [[ ${#successful_removals[@]} -gt 0 ]]; then
+        echo "Successfully removed ${#successful_removals[@]} worktree(s):"
+        printf "  - %s\n" "${successful_removals[@]}"
     fi
     
-    echo "Removing worktree: $worktree_path"
-    git worktree remove "$worktree_path"
-    
-    # Check if command was successful
-    if [[ $? -eq 0 ]]; then
-        echo "Worktree removed successfully: $worktree_path"
-    else
-        echo "Failed to remove worktree: $worktree_path"
+    if [[ ${#failed_removals[@]} -gt 0 ]]; then
+        echo "Failed to remove ${#failed_removals[@]} worktree(s):"
+        printf "  - %s\n" "${failed_removals[@]}"
         return 1
     fi
 }

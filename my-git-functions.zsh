@@ -49,10 +49,63 @@ gwa() {
         echo "Worktree created successfully at: $worktree_path"
         echo "Navigating to worktree directory..."
         z "$worktree_path"
+        
+        # Add VSCode color customization to new worktree
+        echo "Setting up VSCode color customization..."
+        add_vscode_color
     else
         echo "Failed to create worktree"
         return 1
     fi
+}
+
+add_vscode_color() {
+    local vscode_dir=".vscode"
+    local settings_file="$vscode_dir/settings.json"
+    
+    # Create .vscode directory if it doesn't exist
+    if [[ ! -d "$vscode_dir" ]]; then
+        echo "Creating .vscode directory..."
+        mkdir -p "$vscode_dir"
+    fi
+    
+    # Generate random color - distinct colors for easy visual differentiation
+    local colors=(
+        "#0066CC" "#228B22" "#FF8C00" "#9932CC" "#008B8B" 
+        "#4169E1" "#32CD32" "#FFD700" "#8A2BE2" "#00CED1"
+        "#1E90FF" "#00FF7F" "#FFA500" "#6A5ACD" "#20B2AA"
+        "#4682B4" "#3CB371" "#F4A460" "#7B68EE" "#48D1CC"
+        "#5F9EA0" "#9ACD32" "#DEB887" "#9370DB" "#40E0D0"
+        "#87CEEB" "#ADFF2F" "#F0E68C" "#DA70D6" "#AFEEEE"
+    )
+    local active_color=${colors[$((RANDOM % ${#colors[@]}))]}
+    
+    # Create inactive color (add alpha transparency)
+    local inactive_color="${active_color}99"
+    
+    # Create color customization object
+    local color_customizations='{
+        "titleBar.activeBackground": "'$active_color'",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "'$inactive_color'",
+        "titleBar.inactiveForeground": "#e7e7e799"
+    }'
+    
+    # Update or create settings.json
+    if [[ -f "$settings_file" ]]; then
+        echo "Updating existing VSCode settings.json..."
+        # Use jq to merge the color customizations with existing settings
+        local temp_file=$(mktemp)
+        jq --argjson colors "$color_customizations" '.["workbench.colorCustomizations"] = $colors' "$settings_file" > "$temp_file" && mv "$temp_file" "$settings_file"
+    else
+        echo "Creating new VSCode settings.json..."
+        # Create new settings.json with color customizations
+        echo '{
+    "workbench.colorCustomizations": '$color_customizations'
+}' > "$settings_file"
+    fi
+    echo "✓ VSCode settings.json created/updated with color: $active_color"
+    echo "Settings file: $settings_file"
 }
 
 # Git Fetch and Checkout shortcut function

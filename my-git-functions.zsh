@@ -47,9 +47,17 @@ gwa() {
     # Check if command was successful
     if [[ $? -eq 0 ]]; then
         echo "Worktree created successfully at: $worktree_path"
+
+        # Copy .env file if it exists in the main repository
+        if [[ -f ".env" ]]; then
+            echo "Copying .env file to new worktree..."
+            cp .env "$worktree_path/.env"
+            echo "✓ .env file copied successfully"
+        fi
+
         echo "Navigating to worktree directory..."
         z "$worktree_path"
-        
+
         # Add VSCode color customization to new worktree
         echo "Setting up VSCode color customization..."
         add_vscode_color

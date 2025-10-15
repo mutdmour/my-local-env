@@ -153,15 +153,83 @@ gwl() {
     git worktree list
 }
 
+# Private function to remove all worktrees except master
+_gwrm_all() {
+    echo "Finding all worktrees (excluding master)..."
+
+    # Get list of all worktrees, excluding the main repository (master)
+    local worktrees=($(git worktree list --porcelain | grep "^worktree" | awk '{print $2}' | tail -n +2))
+
+    if [[ ${#worktrees[@]} -eq 0 ]]; then
+        echo "No worktrees to remove (only master worktree exists)"
+        return 0
+    fi
+
+    echo "Found ${#worktrees[@]} worktree(s) to remove:"
+    printf "  - %s\n" "${worktrees[@]}"
+    echo ""
+
+    # Ask for confirmation
+    echo -n "Are you sure you want to remove all these worktrees? (y/N): "
+    read confirmation
+
+    if [[ ! "$confirmation" =~ ^[Yy]$ ]]; then
+        echo "Operation cancelled"
+        return 0
+    fi
+
+    local failed_removals=()
+    local successful_removals=()
+
+    # Remove each worktree
+    for worktree_path in "${worktrees[@]}"; do
+        echo "Removing worktree: $worktree_path"
+        git worktree remove "$worktree_path"
+
+        # Check if command was successful
+        if [[ $? -eq 0 ]]; then
+            echo "✓ Worktree removed successfully: $worktree_path"
+            successful_removals+=("$worktree_path")
+        else
+            echo "✗ Failed to remove worktree: $worktree_path"
+            failed_removals+=("$worktree_path")
+        fi
+        echo ""
+    done
+
+    # Summary
+    echo "=== Summary ==="
+    if [[ ${#successful_removals[@]} -gt 0 ]]; then
+        echo "Successfully removed ${#successful_removals[@]} worktree(s):"
+        printf "  - %s\n" "${successful_removals[@]}"
+    fi
+
+    if [[ ${#failed_removals[@]} -gt 0 ]]; then
+        echo "Failed to remove ${#failed_removals[@]} worktree(s):"
+        printf "  - %s\n" "${failed_removals[@]}"
+        return 1
+    fi
+
+    echo "All worktrees removed successfully!"
+}
+
 # Git Worktree Remove shortcut function
 gwrm() {
+    # Check for --all flag
+    if [[ "$1" == "--all" ]]; then
+        _gwrm_all
+        return $?
+    fi
+
     # Check if any arguments are provided
     if [[ $# -eq 0 ]]; then
         echo "Usage: gwrm <worktree-path-or-branch-name> [worktree-path-or-branch-name...]"
+        echo "       gwrm --all"
         echo "Examples:"
         echo "  gwrm branch-name                           # Remove single branch by name"
         echo "  gwrm branch1 branch2 branch3              # Remove multiple branches by name"
         echo "  gwrm /Users/mutasem/repos/n8n-worktree/branch-name  # Remove by full path"
+        echo "  gwrm --all                                 # Remove all worktrees except master"
         echo ""
         echo "Current worktrees:"
         git worktree list

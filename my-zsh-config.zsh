@@ -9,6 +9,8 @@ source <(fzf --zsh)
 # Open VS Code in current repository 
 alias c="code ."
 
+alias yolo="claude --dangerously-skip-permissions"
+
 source "$CURRENT_DIR/my-git-functions.zsh"
 
 # todo add readme

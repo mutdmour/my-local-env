@@ -5,7 +5,12 @@
 
 # Git Worktree Add shortcut function
 gwa() {
-    local base_path="/Users/mutasem/repos/n8n-worktree"
+    local git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+    if [[ -z "$git_root" ]]; then
+        echo "Error: Not in a git repository"
+        return 1
+    fi
+    local base_path=$(dirname "$git_root")
     local branch_name=""
     local create_new_branch=false
     
@@ -228,7 +233,7 @@ gwrm() {
         echo "Examples:"
         echo "  gwrm branch-name                           # Remove single branch by name"
         echo "  gwrm branch1 branch2 branch3              # Remove multiple branches by name"
-        echo "  gwrm /Users/mutasem/repos/n8n-worktree/branch-name  # Remove by full path"
+        echo "  gwrm /path/to/repo/.worktree/branch-name  # Remove by full path"
         echo "  gwrm --all                                 # Remove all worktrees except master"
         echo ""
         echo "Current worktrees:"
@@ -245,7 +250,12 @@ gwrm() {
         
         # If the argument doesn't start with /, assume it's a branch name and construct the full path
         if [[ "$worktree_path" != /* ]]; then
-            local base_path="/Users/mutasem/repos/n8n-worktree"
+            local git_root=$(git rev-parse --show-toplevel 2>/dev/null)
+            if [[ -z "$git_root" ]]; then
+                echo "Error: Not in a git repository"
+                return 1
+            fi
+            local base_path=$(dirname "$git_root")
             worktree_path="$base_path/$worktree_path"
         fi
         
